@@ -11,18 +11,21 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 ### 1. Database foundation
 
 - [x] Create a local SQLite database from Python.
-- [x] Create the `regions` table.
-- [ ] Add the `policies` table.
+- [x] Inspect the source policy columns before designing their table.
+- [x] Add the empty `policies` table.
+- [ ] Load policy rows and verify the resulting table.
 - [ ] Add the `claims` table.
-- [ ] Add relationships and useful indexes.
+- [ ] Decide whether a separate `regions` table solves a real enrichment or validation need.
+- [ ] Add relationships and useful indexes when the queries justify them.
 - [ ] Inspect and verify the database structure.
 
 ### 2. Source data
 
-- [ ] Download the freMTPL2 policy-frequency dataset from OpenML.
+- [x] Download the freMTPL2 policy-frequency dataset from OpenML.
 - [ ] Download the freMTPL2 claim-severity dataset.
-- [ ] Save the original CSV files locally without committing them.
-- [ ] Record the Python packages required to reproduce the download.
+- [x] Save the original policy CSV locally without committing it.
+- [x] Record the Python packages required to reproduce the download.
+- [x] Profile the policy data's shape, types, missing values, duplicate IDs, and exposure range.
 
 ### 3. Load data into SQL
 
@@ -111,7 +114,9 @@ The source data contains no observed premium, so the project must construct one 
 
 ## Important data facts
 
-- freMTPL2 contains approximately 678,000 policies.
+- The downloaded policy-frequency data contains 678,013 rows and 12 columns.
+- No policy fields are missing and no policy IDs are duplicated in this OpenML version.
+- 1,224 policies have exposure above one; the original values are being preserved until the cleaning stage.
 - Policies and claims are connected by policy ID.
 - Exposure can incorrectly exceed one.
 - Policy claim counts can disagree with individual claim records.

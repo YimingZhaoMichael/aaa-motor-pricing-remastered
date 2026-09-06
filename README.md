@@ -8,20 +8,25 @@ The project is being developed incrementally: a file or dependency is added only
 
 The project currently:
 
-1. Defines a `regions` table in `sql/schema.sql`.
-2. Uses `create_database.py` to read and execute that SQL.
-3. Creates a local SQLite database at `data/portfolio.db`.
-4. Excludes the generated database from Git through `.gitignore`.
+1. Uses `download_data.py` to fetch the freMTPL2 policy-frequency dataset from OpenML.
+2. Inspects its columns, types, missing values, duplicate IDs, and exposure range.
+3. Saves the source data locally at `data/raw/fremtpl2_freq.csv`.
+4. Defines an empty `policies` table in `sql/schema.sql` based on the inspected data.
+5. Uses `create_database.py` to create `data/portfolio.db` and execute the schema.
+6. Excludes the virtual environment and generated data from Git through `.gitignore`.
 
 ## Run the current project
 
 From the repository root:
 
 ```powershell
-py -3.11 create_database.py
+.\.venv\Scripts\python.exe .\download_data.py
+.\.venv\Scripts\python.exe .\create_database.py
 ```
 
-Expected output:
+The first command downloads and profiles the policy data. The second rebuilds the SQLite database from `sql/schema.sql`.
+
+Database-build output:
 
 ```text
 Created database at data\portfolio.db
@@ -29,11 +34,12 @@ Created database at data\portfolio.db
 
 ## Current files
 
-- `sql/schema.sql` defines the database structure.
+- `requirements.txt` records the external Python packages required so far.
+- `download_data.py` downloads, profiles, and saves the policy dataset.
+- `sql/schema.sql` defines the empty `policies` table.
 - `create_database.py` creates the database and executes the schema.
-- `.gitignore` prevents generated data and Python cache files from being committed.
+- `.gitignore` prevents the virtual environment, generated data, and Python cache files from being committed.
 
 ## Next step
 
-Add the `policies` and `claims` tables, their relationships, and useful indexes to `sql/schema.sql`; then rebuild and inspect the database.
-
+Write a loader that reads the saved policy CSV, performs only the necessary name and type conversions, and inserts the rows into the empty `policies` table.
