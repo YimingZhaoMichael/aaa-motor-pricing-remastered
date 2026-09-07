@@ -4,7 +4,6 @@ from sklearn.datasets import fetch_openml
 
 policies = fetch_openml(data_id=41214, as_frame=True).frame
 
-print(policies.columns)
 print(policies.head())
 
 print("\nDataset size:")
@@ -18,6 +17,9 @@ print(policies.isna().sum())
 
 print("\nDuplicate IDs:")
 print(policies["IDpol"].duplicated().sum())
+
+print("\nIDs that are decimals:")
+print((policies["IDpol"] % 1 != 0).sum())
 
 print("\nExposure range:")
 print(policies["Exposure"].min(), policies["Exposure"].max())

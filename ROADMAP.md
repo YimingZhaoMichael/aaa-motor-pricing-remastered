@@ -13,7 +13,7 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 - [x] Create a local SQLite database from Python.
 - [x] Inspect the source policy columns before designing their table.
 - [x] Add the empty `policies` table.
-- [ ] Load policy rows and verify the resulting table.
+- [x] Load policy rows and verify the resulting table (678,013 rows).
 - [ ] Add the `claims` table.
 - [ ] Decide whether a separate `regions` table solves a real enrichment or validation need.
 - [ ] Add relationships and useful indexes when the queries justify them.
@@ -29,10 +29,12 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 
 ### 3. Load data into SQL
 
-- [ ] Read the CSV files with Python.
-- [ ] Transform column names and data types.
-- [ ] Insert regions, policies, and claims into SQLite.
-- [ ] Verify row counts and table relationships.
+- [x] Read the saved policy CSV with Python.
+- [x] Match policy column names to SQL and convert whole-number policy IDs to integers.
+- [x] Insert policies into SQLite and verify the policy row count.
+- [ ] Read and transform the claim CSV, then insert claims into SQLite.
+- [ ] Load regions only if a separate table is justified.
+- [ ] Verify table relationships and claim row counts.
 - [ ] Make rebuilding the database safe and repeatable.
 
 ### 4. SQL exploration
@@ -116,6 +118,8 @@ The source data contains no observed premium, so the project must construct one 
 
 - The downloaded policy-frequency data contains 678,013 rows and 12 columns.
 - No policy fields are missing and no policy IDs are duplicated in this OpenML version.
+- The policy-ID fractional-part check returned zero before integer conversion.
+- The first policy import was verified at 678,013 database rows. The loader appends, so rerunning it against populated policies triggers a duplicate-primary-key error. The current manual rebuild order is `create_database.py`, then `load_data.py` using the saved CSV.
 - 1,224 policies have exposure above one; the original values are being preserved until the cleaning stage.
 - Policies and claims are connected by policy ID.
 - Exposure can incorrectly exceed one.
