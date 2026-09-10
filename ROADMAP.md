@@ -14,15 +14,16 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 - [x] Inspect the source policy columns before designing their table.
 - [x] Add the empty `policies` table.
 - [x] Load policy rows and verify the resulting table (678,013 rows).
-- [ ] Add the `claims` table.
-- [ ] Decide whether a separate `regions` table solves a real enrichment or validation need.
+- [x] Add the `claims` table with an automatically generated `claim_id` primary key and repeatable policy IDs.
+- [x] Assess a separate `regions` table: deferred because existing policy region codes suffice and no enrichment source is currently needed.
 - [ ] Add relationships and useful indexes when the queries justify them.
 - [ ] Inspect and verify the database structure.
 
 ### 2. Source data
 
 - [x] Download the freMTPL2 policy-frequency dataset from OpenML.
-- [ ] Download the freMTPL2 claim-severity dataset.
+- [x] Download the freMTPL2 claim-severity dataset.
+- [x] Inspect claim column types, missing values, and repeated policy IDs; save the original claim CSV locally.
 - [x] Save the original policy CSV locally without committing it.
 - [x] Record the Python packages required to reproduce the download.
 - [x] Profile the policy data's shape, types, missing values, duplicate IDs, and exposure range.
@@ -33,9 +34,10 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 - [x] Match policy column names to SQL and convert whole-number policy IDs to integers.
 - [x] Insert policies into SQLite and verify the policy row count.
 - [x] Make successful policy reloads repeatable by deleting existing rows before inserting the saved CSV, preserving the table definition.
-- [ ] Read and transform the claim CSV, then insert claims into SQLite.
+- [x] Read and rename the claim CSV columns, then insert claims into SQLite with generated claim IDs.
+- [x] Replace existing claim rows before loading and verify 26,639 stored rows against the CSV.
 - [ ] Load regions only if a separate table is justified.
-- [ ] Verify table relationships and claim row counts.
+- [ ] Verify every claim policy ID matches a policy before deciding on foreign-key enforcement.
 - [ ] Make rebuilding the database safe and repeatable.
 
 ### 4. SQL exploration
@@ -118,11 +120,14 @@ The source data contains no observed premium, so the project must construct one 
 ## Important data facts
 
 - The downloaded policy-frequency data contains 678,013 rows and 12 columns.
+- The claim-severity CSV and database table both contain 26,639 claim rows. Source columns are `IDpol` and `ClaimAmount`, with no missing values in the inspected data.
+- Claim policy IDs have 1,689 repeated occurrences after the first. Repeated policy IDs can represent multiple claims and are not, by themselves, duplicate claim records.
+- SQLite supplies `claims.claim_id` because it is declared `INTEGER PRIMARY KEY` and omitted from the inserted DataFrame. All loaded claim policy IDs were verified as stored integers.
 - No policy fields are missing and no policy IDs are duplicated in this OpenML version.
 - The policy-ID fractional-part check returned zero before integer conversion.
 - The first policy import was verified at 678,013 database rows. The loader now deletes existing policy rows before inserting the saved CSV, so successful reloads replace the contents without duplicating IDs or recreating the table. The first-build order remains `create_database.py`, then `load_data.py`; subsequent policy reloads need only `load_data.py`.
 - 1,224 policies have exposure above one; the original values are being preserved until the cleaning stage.
-- Policies and claims are connected by policy ID.
+- Policies and claims are intended to connect by policy ID; matching IDs and agreement of claim counts remain to be checked. No foreign key is defined yet.
 - Exposure can incorrectly exceed one.
 - Policy claim counts can disagree with individual claim records.
 - Claim amounts are highly skewed and contain outliers.

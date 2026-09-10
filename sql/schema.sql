@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS policies;
+DROP TABLE IF EXISTS claims;
 
 CREATE TABLE policies (
     policy_id       INTEGER PRIMARY KEY,
@@ -13,4 +14,10 @@ CREATE TABLE policies (
     veh_gas         TEXT NOT NULL,
     density         INTEGER NOT NULL,
     region          TEXT NOT NULL
+);
+
+CREATE TABLE claims (
+    claim_id        INTEGER PRIMARY KEY,
+    policy_id       INTEGER NOT NULL,
+    claim_amount    REAL NOT NULL
 );

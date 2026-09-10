@@ -22,6 +22,15 @@ policies["policy_id"] = policies["policy_id"].astype("int64")
 
 print(policies.head())
 
+claims = pd.read_csv("data/raw/fremtpl2_sev.csv")
+
+claims = claims.rename(columns={
+    "IDpol": "policy_id",
+    "ClaimAmount": "claim_amount",
+})
+
+print(claims.head())
+
 with sqlite3.connect("data/portfolio.db") as connection:
     connection.execute("DELETE FROM policies")
     policies.to_sql("policies", connection, if_exists="append", index=False)
@@ -29,3 +38,10 @@ with sqlite3.connect("data/portfolio.db") as connection:
 
     row_count = connection.execute("SELECT COUNT(*) FROM policies").fetchone()[0]
     print(f"Policies in database: {row_count}")
+
+    connection.execute("DELETE FROM claims")
+    claims.to_sql("claims", connection, if_exists="append", index=False)
+    print("Loaded claims into the database")
+
+    row_count = connection.execute("SELECT COUNT(*) FROM claims").fetchone()[0]
+    print(f"Claims in database: {row_count}")
