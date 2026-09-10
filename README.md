@@ -13,7 +13,7 @@ The project currently:
 3. Saves the source data locally at `data/raw/fremtpl2_freq.csv`.
 4. Defines an empty `policies` table in `sql/schema.sql` based on the inspected data.
 5. Uses `create_database.py` to create `data/portfolio.db` and execute the schema.
-6. Uses `load_data.py` to read the saved CSV, match the SQL column names, convert policy IDs to integers, and insert the rows.
+6. Uses `load_data.py` to read the saved CSV, match the SQL column names, convert policy IDs to integers, and replace the existing policy rows while preserving the table definition.
 7. Prints the SQL row count after loading; the first import was independently verified at 678,013 rows.
 8. Excludes the virtual environment and generated data from Git through `.gitignore`.
 
@@ -29,7 +29,9 @@ From the repository root:
 
 The first command downloads and profiles the policy data. The second executes `sql/schema.sql`, dropping and recreating the `policies` table. The third loads the saved CSV into that empty table.
 
-If the CSV is already saved, skip the download and run the last two commands in order. Recreating the table removes its existing rows. Running the loader alone on an already populated table fails because the same primary-key IDs cannot be inserted twice. The loader currently expects the schema to have been created first; automatic validation and rebuild orchestration remain future work.
+For the first build, create the table before running the loader. Once the CSV and table exist, rerun just `load_data.py` to reload policies. It executes `DELETE FROM policies` to remove the existing rows, then uses `to_sql(..., if_exists="append", index=False)` to insert the CSV rows. This preserves the primary key and other SQL constraints and prevents duplicate rows from accumulating across successful runs.
+
+Running `create_database.py` again drops and recreates the `policies` table, so follow it with the loader to restore the data. Automatic input validation, failure-recovery guarantees, and complete rebuild orchestration remain future work.
 
 Database-build output:
 
@@ -45,9 +47,9 @@ Policies in database: 678013
 - `download_data.py` downloads, profiles, and saves the policy dataset.
 - `sql/schema.sql` defines the empty `policies` table.
 - `create_database.py` creates the database and executes the schema.
-- `load_data.py` reads the saved policy CSV, inserts it into SQLite, and reports the stored row count.
+- `load_data.py` reads the saved policy CSV, replaces the rows in the existing SQLite table, and reports the stored row count.
 - `.gitignore` prevents the virtual environment, generated data, and Python cache files from being committed.
 
 ## Next step
 
-Verify the complete create-then-load sequence, then continue toward loading claim data. Add validation and repeatable rebuild handling as the workflow develops. Original exposure values remain unchanged until the cleaning stage.
+Download and inspect the claim-severity dataset before designing its SQL table and extending the loader. Original policy exposure values remain unchanged until the cleaning stage.

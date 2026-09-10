@@ -23,6 +23,7 @@ policies["policy_id"] = policies["policy_id"].astype("int64")
 print(policies.head())
 
 with sqlite3.connect("data/portfolio.db") as connection:
+    connection.execute("DELETE FROM policies")
     policies.to_sql("policies", connection, if_exists="append", index=False)
     print("Loaded policies into the database")
 

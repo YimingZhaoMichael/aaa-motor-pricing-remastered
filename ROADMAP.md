@@ -32,6 +32,7 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 - [x] Read the saved policy CSV with Python.
 - [x] Match policy column names to SQL and convert whole-number policy IDs to integers.
 - [x] Insert policies into SQLite and verify the policy row count.
+- [x] Make successful policy reloads repeatable by deleting existing rows before inserting the saved CSV, preserving the table definition.
 - [ ] Read and transform the claim CSV, then insert claims into SQLite.
 - [ ] Load regions only if a separate table is justified.
 - [ ] Verify table relationships and claim row counts.
@@ -119,7 +120,7 @@ The source data contains no observed premium, so the project must construct one 
 - The downloaded policy-frequency data contains 678,013 rows and 12 columns.
 - No policy fields are missing and no policy IDs are duplicated in this OpenML version.
 - The policy-ID fractional-part check returned zero before integer conversion.
-- The first policy import was verified at 678,013 database rows. The loader appends, so rerunning it against populated policies triggers a duplicate-primary-key error. The current manual rebuild order is `create_database.py`, then `load_data.py` using the saved CSV.
+- The first policy import was verified at 678,013 database rows. The loader now deletes existing policy rows before inserting the saved CSV, so successful reloads replace the contents without duplicating IDs or recreating the table. The first-build order remains `create_database.py`, then `load_data.py`; subsequent policy reloads need only `load_data.py`.
 - 1,224 policies have exposure above one; the original values are being preserved until the cleaning stage.
 - Policies and claims are connected by policy ID.
 - Exposure can incorrectly exceed one.
