@@ -12,3 +12,4 @@ with sqlite3.connect(database) as connection:
     connection.executescript(schema)
 
 print(f"Created database at {database}")
+connection.close()

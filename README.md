@@ -16,6 +16,7 @@ The project currently:
 6. Uses `load_data.py` to read both saved CSVs, match the SQL column names, convert policy-dataset IDs to integers, and replace existing rows in both tables while preserving their definitions.
 7. Prints SQL row counts after loading; both counts were independently verified against the CSVs: 678,013 policies and 26,639 claims.
 8. Excludes the virtual environment and generated data from Git through `.gitignore`.
+9. Uses `inspect_data.py` to check unmatched claim policy IDs and compare reported policy claim counts with matching claim records, without changing the database.
 
 ## Run the current project
 
@@ -50,10 +51,28 @@ Claims in database: 26639
 - `sql/schema.sql` defines the empty `policies` and `claims` tables.
 - `create_database.py` creates the database and executes the schema.
 - `load_data.py` reads both saved CSVs, replaces the rows in their existing SQLite tables, and reports each stored row count.
+- `inspect_data.py` runs SQL joins and count comparisons against the loaded tables and reports mismatches. It can run independently of downloading or loading.
 - `.gitignore` prevents the virtual environment, generated data, and Python cache files from being committed.
 
 ## Next step
 
-Use SQL to check whether every claim policy ID exists in `policies`, then compare claim-record counts with each policy's `claim_nb`. These relationships have not yet been verified or enforced with a foreign key. Inspect claim amounts and reconcile the datasets before constructing one analysis row per policy and applying documented cleaning rules. Original values remain unchanged until that stage.
+Build one analysis row per policy with its reported claim count, matching claim-record count, total recorded claim amount, and a mismatch flag. Preserve the source tables and decide how incomplete records will be treated before calculating pricing results. The proposed approach is recorded in ROADMAP.md; no exclusions or count corrections have been implemented.
 
 A separate `regions` table is deferred: policies already contain region codes, and no additional region data or validation need currently justifies another table.
+
+## Relationship inspection — 13 September 2026
+
+Run the read-only inspection against the existing database:
+
+```powershell
+.\.venv\Scripts\python.exe .\inspect_data.py
+```
+
+Results from the current data:
+
+- 195 claim records refer to 6 policy IDs absent from `policies`.
+- 9,117 distinct policies have reported claim counts that differ from their matching claim-record counts.
+- All 9,117 have fewer matching claim records than reported; none have more.
+- Of these, 9,116 have zero matching claim records and 1 has some matching records, but fewer than reported.
+
+These findings establish disagreement between the datasets, not which source is wrong. No matching claim records does not prove no claims occurred or that claim cost was zero. Original counts and amounts remain unchanged. No foreign key is currently enforced between these tables.

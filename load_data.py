@@ -45,3 +45,5 @@ with sqlite3.connect("data/portfolio.db") as connection:
 
     row_count = connection.execute("SELECT COUNT(*) FROM claims").fetchone()[0]
     print(f"Claims in database: {row_count}")
+
+connection.close()

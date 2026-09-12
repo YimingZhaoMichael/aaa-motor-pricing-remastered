@@ -37,11 +37,13 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 - [x] Read and rename the claim CSV columns, then insert claims into SQLite with generated claim IDs.
 - [x] Replace existing claim rows before loading and verify 26,639 stored rows against the CSV.
 - [ ] Load regions only if a separate table is justified.
-- [ ] Verify every claim policy ID matches a policy before deciding on foreign-key enforcement.
+- [x] Check claim policy IDs against policies: found 195 unmatched claim records across 6 absent policy IDs.
+- [ ] Decide on foreign-key enforcement after handling unmatched claims in the analysis workflow.
 - [ ] Make rebuilding the database safe and repeatable.
 
 ### 4. SQL exploration
 
+- [x] Use `LEFT JOIN`, `IS NULL`, `COUNT`, `COUNT(DISTINCT ...)`, `GROUP BY`, and `HAVING` in `inspect_data.py` to inspect table relationships and claim-count differences.
 - [ ] Calculate policy count, exposure, and claim count.
 - [ ] Calculate claim frequency by driver age.
 - [ ] Calculate claim severity by region.
@@ -55,7 +57,8 @@ Build a reproducible project that downloads genuine motor-insurance data, stores
 - [ ] Join total claim amounts to policies.
 - [ ] Cap exposure values above one.
 - [ ] Investigate duplicate policy IDs.
-- [ ] Reconcile policy claim counts with individual claim records.
+- [x] Measure policy claim-count mismatches and separate zero-record cases from partial-record cases.
+- [ ] Implement and document the analytical treatment of mismatching claim counts; inspection alone does not resolve them.
 - [ ] Investigate zero, tiny, and extreme claim amounts.
 - [ ] Record how many rows each cleaning decision affects.
 
@@ -127,12 +130,28 @@ The source data contains no observed premium, so the project must construct one 
 - The policy-ID fractional-part check returned zero before integer conversion.
 - The first policy import was verified at 678,013 database rows. The loader now deletes existing policy rows before inserting the saved CSV, so successful reloads replace the contents without duplicating IDs or recreating the table. The first-build order remains `create_database.py`, then `load_data.py`; subsequent policy reloads need only `load_data.py`.
 - 1,224 policies have exposure above one; the original values are being preserved until the cleaning stage.
-- Policies and claims are intended to connect by policy ID; matching IDs and agreement of claim counts remain to be checked. No foreign key is defined yet.
+- Relationship inspection found 195 claim records across 6 IDs absent from policies: 2262511, 2277846, 2282134, 2286775, 2220367, and 2227533. No foreign key is defined yet.
+- 9,117 distinct policies have fewer matching claim records than their reported `claim_nb`: 9,116 have zero matching records and 1 has a positive but lower matching count. No policy has more matching records than reported in this inspection.
 - Exposure can incorrectly exceed one.
 - Policy claim counts can disagree with individual claim records.
 - Claim amounts are highly skewed and contain outliers.
 - Some dataset versions may contain duplicate policy IDs.
 - The dataset does not contain an observed premium column.
+
+## Next session: analysis preparation
+
+Relationship inspection was completed on 13 September 2026. The discrepancies do not establish whether policy counts are overstated, claim records are incomplete, or source inclusion rules differ. No source rows or counts have been corrected or excluded.
+
+Proposed approach, not yet implemented:
+
+1. Preserve the original policy and claim tables.
+2. Build one analysis row per policy containing the reported count, matched claim-record count, total recorded claim amount, and mismatch flag. Aggregate claims by policy before joining so multiple claim rows do not multiply policy exposure.
+3. Keep the 195 unmatched claims in the source table, but exclude them from policy-based pricing analysis because their policy characteristics and exposure are unavailable. Record their total amount as well as their count; the amount has not yet been measured.
+4. Consider using reported policy counts for frequency and available claim records for severity, explicitly documenting source assumptions and possible missing records. Do not assume that combining estimates from differently selected populations is unbiased.
+5. Do not treat missing claim amounts as zero cost for policies reporting claims. For an initial analysis requiring counts and amounts to agree, consider using policies with agreeing counts, while reporting exclusions and possible selection bias. Agreement alone does not prove the data is complete.
+6. Inspect claim-amount ranges and decide on cleaning rules before modelling. Record the effect of each implemented decision.
+
+The next coding step is the policy-level analysis dataset, one small query at a time. Automated validation, failure recovery, and full rebuild orchestration remain separate unfinished work.
 
 ## Working method
 
